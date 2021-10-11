@@ -2,34 +2,29 @@ package postgres
 
 import postgres.Profile.api._
 
-import scala.concurrent.{ExecutionContext, Future}
+class Users(tag: Tag) extends Table[models.User](tag, "users") {
+  val id           = column[Long]("id", O.Unique, O.AutoInc)
+  val login        = column[String]("login")
+  val passwordHash = column[String]("password_hash")
+  val salt         = column[String]("salt")
+  val role         = column[models.Role]("role")
 
-class Users(query: TableQuery[Users.Mapping])(implicit db: Database, ec: ExecutionContext) extends dao.Users {
-  def create(user: models.User): Future[Int] =
-    db.run(sqlu"insert into users (login, password_hash, salt, role) values (${user.login}, ${user.passwordHash}, ${user.salt}, ${user.role})")
-  def getById(id: Long): Future[Option[models.User]] = db.run(sql"select * from users where id = $id".as[models.User].headOption)
-  def getAll: Future[List[models.User]]              = db.run(sql"select * from users".as[models.User].map(_.toList))
-  def deleteById(id: Long): Future[Int]              = db.run(sqlu"delete from users where id = $id")
+  val * = (id, login, passwordHash, salt, role) <> (models.User.apply _ tupled, models.User.unapply)
 
-  def init: Future[Unit] = db.run(query.schema.create)
+  val pk = primaryKey("users_pk", id)
 }
 
 object Users {
+  val query = TableQuery[Users]
 
-  class Mapping(tag: Tag) extends Table[models.User](tag, "users") {
-    val id           = column[Long]("id", O.Unique, O.AutoInc)
-    val login        = column[String]("login")
-    val passwordHash = column[String]("password_hash")
-    val salt         = column[String]("salt")
-    val role         = column[models.Role]("role")
+  def create(user: models.User): DBIO[Int] = query += user
 
-    val * = (id, login, passwordHash, salt, role) <> (models.User.apply _ tupled, models.User.unapply)
+  def getById(id: Long): DBIO[Option[models.User]] = query.filter(_.id === id).result.headOption
 
-    val pk = primaryKey("users_pk", id)
-  }
+  def getAll: DBIO[Seq[models.User]] = query.result
 
-  object Mapping {
-    val query = TableQuery[Mapping]
-  }
+  def deleteById(id: Long): DBIO[Int] = query.filter(_.id === id).delete
+
+  def init: DBIO[Unit] = query.schema.create
 
 }

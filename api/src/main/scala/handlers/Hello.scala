@@ -1,11 +1,13 @@
 package handlers
 
-import db.DbFactory
-import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
+import jakarta.servlet.http.{HttpServletRequest, HttpServletResponse}
+import postgres.Profile.api.Database
 
 import scala.concurrent.ExecutionContext
 
-class Hello(implicit ec: ExecutionContext, dbFactory: DbFactory) extends HttpServlet {
+class Hello(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+
+  val route = "/hello"
 
   override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
     resp.setContentType("application/json")

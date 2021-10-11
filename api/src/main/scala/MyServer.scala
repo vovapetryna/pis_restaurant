@@ -1,6 +1,6 @@
-import db.DbFactory
 import org.eclipse.jetty.server.{NetworkConnector, Server}
-import org.eclipse.jetty.servlet.ServletHandler
+import org.eclipse.jetty.servlet.{ServletHandler, ServletHolder}
+import postgres.Profile.api.Database
 
 import scala.concurrent.ExecutionContext
 
@@ -12,15 +12,15 @@ object MyServer {
 
   def port: Int = server.getConnectors()(0) match { case connector: NetworkConnector => connector.getLocalPort }
 
-  private def build(implicit ec: ExecutionContext, dbFactory: DbFactory): Unit = {
+  private def build(implicit ec: ExecutionContext, db: Database): Unit = {
     server.setHandler(handler)
 
-
-
-    handler.addServletWithMapping(classOf[handlers.Hello], "/hello")
+    (new handlers.Hello :: Nil)
+      .map(servlet => new ServletHolder(servlet) -> servlet.route)
+      .foreach { case (holder, route) => handler.addServletWithMapping(holder, route) }
   }
 
-  def start(implicit ec: ExecutionContext, dbFactory: DbFactory): Unit = {
+  def start(implicit ec: ExecutionContext, db: Database): Unit = {
     build
     server.start()
     println(s"Server started at port: $port")

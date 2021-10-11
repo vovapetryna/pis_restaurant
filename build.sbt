@@ -11,7 +11,7 @@ lazy val core = Project(id = "core", base = file("modules/core"))
   .settings(
     libraryDependencies ++=
       Seq(
-        "com.lihaoyi"         %% "upickle"         % "1.4.0",
+        "com.lihaoyi"          %% "upickle"        % "1.4.0",
         "ch.qos.logback"       % "logback-classic" % "1.2.3",
         "com.aventrix.jnanoid" % "jnanoid"         % "2.0.0",
         "de.mkammerer"         % "argon2-jvm"      % "2.7"
