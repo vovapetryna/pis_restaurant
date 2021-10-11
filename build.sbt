@@ -37,8 +37,9 @@ lazy val api = Project(id = "api", base = file("api"))
   .settings(
     libraryDependencies ++=
       Seq(
-        "org.eclipse.jetty" % "jetty-server"  % "11.0.6",
-        "org.eclipse.jetty" % "jetty-servlet" % "11.0.6"
+        "org.eclipse.jetty"      % "jetty-server"  % "11.0.6",
+        "org.eclipse.jetty"      % "jetty-servlet" % "11.0.6",
+        "org.scala-lang.modules" %% "scala-xml"    % "2.0.1"
       )
   )
 
