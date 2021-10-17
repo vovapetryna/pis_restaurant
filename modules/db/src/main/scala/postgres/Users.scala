@@ -4,7 +4,7 @@ import postgres.Profile.api._
 
 class Users(tag: Tag) extends Table[models.User](tag, "users") {
   val id           = column[Long]("id", O.Unique, O.AutoInc)
-  val login        = column[String]("login")
+  val login        = column[String]("login", O.Unique)
   val passwordHash = column[String]("password_hash")
   val salt         = column[String]("salt")
   val role         = column[models.Role]("role")
@@ -20,6 +20,10 @@ object Users {
   def create(user: models.User): DBIO[Int] = query += user
 
   def getById(id: Long): DBIO[Option[models.User]] = query.filter(_.id === id).result.headOption
+
+  def getByIds(ids: Set[Long]): DBIO[Seq[models.User]] = query.filter(_.id inSet ids).result
+
+  def getByLogin(login: String): DBIO[Option[models.User]] = query.filter(_.login === login).result.headOption
 
   def getAll: DBIO[Seq[models.User]] = query.result
 

@@ -39,7 +39,9 @@ lazy val api = Project(id = "api", base = file("api"))
       Seq(
         "org.eclipse.jetty"      % "jetty-server"  % "11.0.6",
         "org.eclipse.jetty"      % "jetty-servlet" % "11.0.6",
-        "org.scala-lang.modules" %% "scala-xml"    % "2.0.1"
+        "org.scala-lang.modules" %% "scala-xml"    % "2.0.1",
+        "com.github.jwt-scala"   %% "jwt-core"     % "9.0.2",
+        "com.github.jwt-scala"   %% "jwt-upickle"  % "9.0.2"
       )
   )
 

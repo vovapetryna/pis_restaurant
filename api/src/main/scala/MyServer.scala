@@ -14,8 +14,15 @@ object MyServer {
     handler.setContextPath("/")
     server.setHandler(handler)
 
-    (new handlers.auth.Registration ::
+    (new handlers.index.Menu ::
+      new handlers.auth.Registration ::
       new handlers.auth.Authorization ::
+      new handlers.auth.Logout ::
+      new handlers.order.Order ::
+      new handlers.order.Orders ::
+      new handlers.order.OrderUpdate ::
+      new handlers.menu.Menu ::
+      new handlers.menu.MenuUpdate ::
       Nil)
       .map { servlet =>
         val holder = new ServletHolder(servlet)

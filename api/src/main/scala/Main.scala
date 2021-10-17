@@ -10,6 +10,8 @@ object Main extends App {
   implicit val config: Config       = ConfigFactory.load.resolve()
   implicit val db: Database         = Database.forConfig("postgresql", config)
 
+  db.run(postgres.init).onComplete(println)
+
   MyServer.start
 
 }

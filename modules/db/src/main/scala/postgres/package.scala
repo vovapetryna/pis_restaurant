@@ -8,8 +8,9 @@ package object postgres {
     for {
       _ <- Users.init
       _ <- Orders.init
-      _ <- OrderRecords.init
       _ <- MenuRecords.init
+      _ <- OrderRecords.init
+      _ <- Users.create(models.User.fromAuth(shared.Auth("admin", "admin"), models.Role.Admin))
     } yield ()
 
 }
