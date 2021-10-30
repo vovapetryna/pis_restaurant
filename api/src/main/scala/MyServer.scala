@@ -1,3 +1,4 @@
+import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.{NetworkConnector, Server}
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import postgres.Profile.api.Database
@@ -5,16 +6,25 @@ import postgres.Profile.api.Database
 import scala.concurrent.ExecutionContext
 
 object MyServer {
-  private val server: Server = new Server(9000)
-  private val handler        = new ServletContextHandler()
+  private val server: Server   = new Server(9000)
+  private val handler          = new ServletContextHandler()
+  private val rootPath: String = "/"
+
+  handler.setContextPath(rootPath)
+  server.setHandler(handler)
 
   def port: Int = server.getConnectors()(0) match { case connector: NetworkConnector => connector.getLocalPort }
 
-  private def build(implicit ec: ExecutionContext, db: Database): Unit = {
-    handler.setContextPath("/")
-    server.setHandler(handler)
+  class RootServlet(services: List[handlers.Routable.Service]) extends HttpServlet {
+    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit =
+      services.find(_.route == req.getRequestURI).foreach(_.doGet(req, resp))
 
-    (new handlers.index.Menu ::
+    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit =
+      services.find(_.route == req.getRequestURI).foreach(_.doPost(req, resp))
+  }
+
+  private def build(implicit ec: ExecutionContext, db: Database): Unit = {
+    val services = new handlers.index.Menu ::
       new handlers.auth.Registration ::
       new handlers.auth.Authorization ::
       new handlers.auth.Logout ::
@@ -23,13 +33,12 @@ object MyServer {
       new handlers.order.OrderUpdate ::
       new handlers.menu.Menu ::
       new handlers.menu.MenuUpdate ::
-      Nil)
-      .map { servlet =>
-        val holder = new ServletHolder(servlet)
-        holder.setAsyncSupported(true)
-        holder -> servlet.route
-      }
-      .foreach { case (holder, route) => handler.addServlet(holder, route) }
+      Nil
+
+    val rootServlet = new RootServlet(services)
+    val rootHolder  = new ServletHolder(rootServlet)
+    rootHolder.setAsyncSupported(true)
+    handler.addServlet(rootHolder, rootPath)
   }
 
   def start(implicit ec: ExecutionContext, db: Database): Unit = {

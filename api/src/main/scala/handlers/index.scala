@@ -7,18 +7,16 @@ import scala.concurrent.ExecutionContext
 
 object index {
 
-  class Menu(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Menu(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.index
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withSession[shared.Session] { session =>
           if (session.role == models.Role.Client) resp.sendRedirect(paths.order)
           else resp.sendRedirect(paths.menu)
         }
       }
-    }
   }
 
 }

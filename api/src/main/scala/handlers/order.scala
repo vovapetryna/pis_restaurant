@@ -7,11 +7,10 @@ import scala.concurrent.ExecutionContext
 
 object order {
 
-  class Order(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Order(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.order
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withClient { _ =>
           asyncHandle {
@@ -21,10 +20,8 @@ object order {
           }
         }
       }
-    }
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withClient { session =>
           asyncHandle {
@@ -38,14 +35,12 @@ object order {
           }
         }
       }
-    }
   }
 
-  class Orders(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Orders(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.orders
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withSession[shared.Session] { session =>
           if (session.role == models.Role.Client)
@@ -59,17 +54,15 @@ object order {
             }
         }
       }
-    }
   }
 
-  class OrderUpdate(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class OrderUpdate(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.orderUpdate
 
     def update(uE: models.Order.Update): DBIO[Boolean] =
       postgres.Orders.update(uE.id, uE.status).map(_ == 1)
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withAdmin { _ =>
           asyncHandle {
@@ -80,7 +73,6 @@ object order {
           }
         }
       }
-    }
   }
 
 }

@@ -7,11 +7,10 @@ import scala.concurrent.ExecutionContext
 
 object menu {
 
-  class Menu(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Menu(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.menu
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withAdmin { _ =>
           asyncHandle {
@@ -21,10 +20,8 @@ object menu {
           }
         }
       }
-    }
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withAdmin { _ =>
           asyncHandle {
@@ -34,10 +31,9 @@ object menu {
           }
         }
       }
-    }
   }
 
-  class MenuUpdate(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class MenuUpdate(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.menuUpdate
 
     def delete(uE: models.MenuRecord.Update): DBIO[Boolean] =
@@ -46,8 +42,7 @@ object menu {
     def update(uE: models.MenuRecord.Update): DBIO[Boolean] =
       if (!uE.delete) postgres.MenuRecords.update(models.MenuRecord.fromUpdate(uE)).map(_ == 1) else DBIO.successful(true)
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         sessions.withAdmin { _ =>
           asyncHandle {
@@ -60,7 +55,6 @@ object menu {
           }
         }
       }
-    }
   }
 
 }

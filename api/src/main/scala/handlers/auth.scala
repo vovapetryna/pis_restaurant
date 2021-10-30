@@ -7,40 +7,33 @@ import scala.concurrent.ExecutionContext
 
 object auth {
 
-  class Registration(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Registration(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.registration
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         resp.getWriter.println(pages.auth.registration)
       }
-    }
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         asyncHandle {
           db.run(postgres.Users.create(models.User.fromAuth(req.to[shared.Auth])))
             .map(_ => resp.sendRedirect(paths.authorization))
         }
       }
-    }
 
   }
 
-  class Authorization(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Authorization(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.authorization
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         resp.getWriter.println(pages.auth.authorization)
       }
-    }
 
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doPost(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         asyncHandle {
           val model = req.to[shared.Auth]
@@ -52,20 +45,17 @@ object auth {
           }
         }
       }
-    }
 
   }
 
-  class Logout(implicit ec: ExecutionContext, db: Database) extends RoutableServlet {
+  class Logout(implicit ec: ExecutionContext, db: Database) extends Routable.Service {
     val route: String = paths.logout
 
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      implicit val (r, s) = (req, resp)
+    override def doGet(implicit req: HttpServletRequest, resp: HttpServletResponse): Unit =
       base {
         resp.addCookie(cookies.expire(sessions.cookieKey))
         resp.getWriter.println(pages.auth.logout)
       }
-    }
 
   }
 
