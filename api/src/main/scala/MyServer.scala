@@ -18,19 +18,24 @@ object MyServer extends Directives {
       .handleNotFound { complete(HttpResponse(StatusCodes.NotFound, entity = "Not here!")) }
       .result()
 
-  def routes(implicit ec: ExecutionContext, db: Database): Route =
+  def routes(implicit ec: ExecutionContext, db: Database): Route = {
+    val accountService: api.AccountService = new services.AccountServiceImpl()
+    val menuService: api.MenuService       = new services.MenuServiceImpl()
+    val orderService: api.OrderService     = new services.OrderServiceImpl()
+
     directives.DebuggingDirectives.logRequestResult("api", Logging.InfoLevel) {
       handleRejections(myRejectionHandler) {
-        (new auth.Registration).routes ~
-          (new auth.Authorization).routes ~
+        new auth.Registration(accountService).routes ~
+          new auth.Authorization(accountService).routes ~
           (new auth.Logout).routes ~
           (new index.Menu).routes ~
-          (new menu.Menu).routes ~
-          (new menu.MenuUpdate).routes ~
-          (new order.Order).routes ~
-          (new order.Orders).routes ~
-          (new order.OrderUpdate).routes
+          new menu.Menu(menuService).routes ~
+          new menu.MenuUpdate(menuService).routes ~
+          new order.Order(orderService, menuService).routes ~
+          new order.Orders(orderService).routes ~
+          new order.OrderUpdate(orderService).routes
       }
     }
+  }
 
 }

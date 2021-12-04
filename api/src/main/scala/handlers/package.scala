@@ -30,10 +30,7 @@ package object handlers {
       }
   }
 
-  implicit class FormMapOps(value: Map[String, List[String]]) {
-    def toModel[T](implicit formRW: shared.FormRW[T]): T =
-      formRW.read(value)
-  }
+  implicit class FormMapOps(value: Map[String, List[String]]) { def toModel[T](implicit formRW: shared.FormRW[T]): T = formRW.read(value) }
 
   object cookies extends Directives with LazyLogging {
     case object EmptyCookieRejection extends Rejection
