@@ -1,50 +1,36 @@
-import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
-import org.eclipse.jetty.server.{NetworkConnector, Server}
-import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
+import akka.event.Logging
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.server._
 import postgres.Profile.api.Database
 
 import scala.concurrent.ExecutionContext
 
-object MyServer {
-  private val server: Server   = new Server(9000)
-  private val handler          = new ServletContextHandler()
-  private val rootPath: String = "/"
+object MyServer extends Directives {
+  import handlers._
 
-  handler.setContextPath(rootPath)
-  server.setHandler(handler)
+  private implicit def myRejectionHandler: RejectionHandler =
+    RejectionHandler
+      .newBuilder()
+      .handle { case BadServiceRejection(error) => complete(HttpResponse(StatusCodes.BadRequest, entity = s"Service error: $error")) }
+      .handle { case cookies.EmptyCookieRejection => paths.authorization.redirect }
+      .handle { case sessions.SessionDecodingRejection => paths.authorization.redirect }
+      .handle { case sessions.PermissionDeniedRejection => paths.authorization.redirect }
+      .handleNotFound { complete(HttpResponse(StatusCodes.NotFound, entity = "Not here!")) }
+      .result()
 
-  def port: Int = server.getConnectors()(0) match { case connector: NetworkConnector => connector.getLocalPort }
+  def routes(implicit ec: ExecutionContext, db: Database): Route =
+    directives.DebuggingDirectives.logRequestResult("api", Logging.InfoLevel) {
+      handleRejections(myRejectionHandler) {
+        (new auth.Registration).routes ~
+          (new auth.Authorization).routes ~
+          (new auth.Logout).routes ~
+          (new index.Menu).routes ~
+          (new menu.Menu).routes ~
+          (new menu.MenuUpdate).routes ~
+          (new order.Order).routes ~
+          (new order.Orders).routes ~
+          (new order.OrderUpdate).routes
+      }
+    }
 
-  class RootServlet(services: List[handlers.Routable.Service]) extends HttpServlet {
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit =
-      services.find(_.route == req.getRequestURI).foreach(_.doGet(req, resp))
-
-    override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit =
-      services.find(_.route == req.getRequestURI).foreach(_.doPost(req, resp))
-  }
-
-  private def build(implicit ec: ExecutionContext, db: Database): Unit = {
-    val services = new handlers.index.Menu ::
-      new handlers.auth.Registration ::
-      new handlers.auth.Authorization ::
-      new handlers.auth.Logout ::
-      new handlers.order.Order ::
-      new handlers.order.Orders ::
-      new handlers.order.OrderUpdate ::
-      new handlers.menu.Menu ::
-      new handlers.menu.MenuUpdate ::
-      Nil
-
-    val rootServlet = new RootServlet(services)
-    val rootHolder  = new ServletHolder(rootServlet)
-    rootHolder.setAsyncSupported(true)
-    handler.addServlet(rootHolder, rootPath)
-  }
-
-  def start(implicit ec: ExecutionContext, db: Database): Unit = {
-    build
-    server.start()
-    println(s"Server started at port: $port")
-    server.join()
-  }
 }

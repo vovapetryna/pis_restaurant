@@ -6,15 +6,19 @@ val commonSettings = Seq(
   scalacOptions += "-language:postfixOps"
 )
 
+val akkaVersion     = "2.6.13"
+val akkaHttpVersion = "10.2.4"
+
 lazy val core = Project(id = "core", base = file("modules/core"))
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++=
       Seq(
-        "com.lihaoyi"          %% "upickle"        % "1.4.0",
-        "ch.qos.logback"       % "logback-classic" % "1.2.3",
-        "com.aventrix.jnanoid" % "jnanoid"         % "2.0.0",
-        "de.mkammerer"         % "argon2-jvm"      % "2.7"
+        "com.lihaoyi"                %% "upickle"        % "1.4.0",
+        "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.2",
+        "ch.qos.logback"             % "logback-classic" % "1.2.3",
+        "com.aventrix.jnanoid"       % "jnanoid"         % "2.0.0",
+        "de.mkammerer"               % "argon2-jvm"      % "2.7"
       )
   )
   .settings(scalacOptions ++= Seq("-language:implicitConversions"))
@@ -37,11 +41,12 @@ lazy val api = Project(id = "api", base = file("api"))
   .settings(
     libraryDependencies ++=
       Seq(
-        "org.eclipse.jetty"      % "jetty-server"  % "11.0.6",
-        "org.eclipse.jetty"      % "jetty-servlet" % "11.0.6",
-        "org.scala-lang.modules" %% "scala-xml"    % "2.0.1",
-        "com.github.jwt-scala"   %% "jwt-core"     % "9.0.2",
-        "com.github.jwt-scala"   %% "jwt-upickle"  % "9.0.2"
+        "com.typesafe.akka"    %% "akka-actor-typed" % akkaVersion,
+        "com.typesafe.akka"    %% "akka-http"        % akkaHttpVersion,
+        "com.typesafe.akka"    %% "akka-stream"      % akkaVersion,
+        "com.typesafe.akka"    %% "akka-http-xml"    % akkaHttpVersion,
+        "com.github.jwt-scala" %% "jwt-core"         % "9.0.2",
+        "com.github.jwt-scala" %% "jwt-upickle"      % "9.0.2"
       )
   )
 
